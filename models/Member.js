@@ -12,9 +12,10 @@ const memberSchema = new mongoose.Schema({
         trim: true,
         unique: true
     },
-    deadline: {
-        type: Date,
-        required: true
+    password: {
+        type: String,
+        required: true,
+        trim: true
     },
     role: {
         type: String,
