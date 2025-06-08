@@ -1,74 +1,46 @@
-const express=require('express');
-const app=new express();
-const cors=require('cors')
-const PORT=4000;
-const productModel=require("./model/productData"); //To use the schema defined in another external file
-require("./connection");
-app.use(express.json())
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const projectRoutes = require('./routes/projectRoutes');
+const memberRoutes = require('./routes/memberRoutes');
+
+const app = express();
+
+// Middleware
 app.use(cors());
+app.use(express.json());
 
-//API end point to read data from the database
-app.get('/tasktrackerr',async(req,res)=>{
-    console.log("Inside API")
-    try{
-        const data=await tasktrackerModel.find();
-        console.log(data);
-        res.send(data) //To send data to the frontend as part of the response object
-    }
-    catch(error){
-        console.log("Error occured while connecting to the DB");
-    }
+// Routes
+app.use('/api/projects', projectRoutes);
+app.use('/api/members', memberRoutes);
+
+// MongoDB Connection
+const MONGODB_URI = 'mongodb+srv://prabinpradeep679:LViv2jEhD3f78S7o@cluster0.tywp1uh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+
+mongoose.connect(MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+    ssl: true,
+    tls: true,
+    tlsAllowInvalidCertificates: true
 })
-
-app.post('/newmember',async(req,res)=>{
-    try {
-
-            var item=req.body;
-            const datasave=new tasktrackerModel(item);
-            const saveddata= await datasave.save();
-            res.send('Post successful');
-
-    } catch (error) {
-        console.log(error);
-    }
+.then(() => {
+    console.log('Connected to MongoDB Atlas');
 })
+.catch((err) => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+});
 
-//API end point for new document
-app.post('/newproduct',async(req,res)=>{
-    try {
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ message: 'Something went wrong!' });
+});
 
-            var item=req.body;
-            const datasave=new productModel(item);
-            const saveddata= await datasave.save();
-            res.send('Post successful');
-    } catch (error) {
-        console.log(error)
-    }
-})
-
-//delete a document
-app.delete('/productremoval/:id',async(req,res)=>{
-    try {
-        await productModel.findByIdAndDelete(req.params.id);
-    res.send('Deleted successfully')
-    } catch (error) {
-        console.log(error)
-    }
-
-})
-
-//update a document
-app.put('/product-updation/:id',async (req,res)=>{
-    try {
-     const data= await productModel.findByIdAndUpdate(req.params.id,req.body);
-     res.send('Updated successfully')
-    } catch (error) {
-     console.log(error)
-    }
- })
-
-
-// Server in listening mode
-app.listen(PORT, ()=>{
-    console.log(`Server is in Listening mode ${PORT}`);
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
